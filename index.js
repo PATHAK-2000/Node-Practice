@@ -1,4 +1,5 @@
 const express = require("express");
+const Joi = require("joi");
 const app = express();
 app.use(express.json());
 
@@ -44,13 +45,43 @@ app.get("/api/courses/:id", (req, res) => {
 });
 
 app.post("/api/courses/all", (req, res) => {
+  const schema = {
+    courseName: Joi.string().min(1).required(),
+  };
+
+  const result = Joi.validate(req.body, schema);
+
+  if (result.error) {
+    res.status(400).send(result.error.details[0].message);
+    return;
+  }
   const course = {
     id: courses.length + 1,
     courseName: req.body.courseName,
   };
-  courses.push(course)
+  courses.push(course);
+  res.send(course);
+});
+
+app.put("/api/courses/:id", (req, res) => {
+  const course = courses.find((c) => c.id === parseInt(req.params.id));
+  if (!course) res.status(404).send("This course dosen't exist");
+
+  const schema = {
+    courseName: Joi.string().min(1).required(),
+  };
+
+  const result = Joi.validate(req.body, schema);
+
+  if (result.error) {
+    res.status(400).send(result.error.details[0].message);
+    return;
+  }
+
+  course.courseName = req.body.courseName
   res.send(course)
+
 });
 
 const port = process.env.PORT || 3000;
-app.listen(port, () => console.log("Server started baby!!"));
+app.listen(port, () => console.log(`Server started baby on ${port}!!`));
